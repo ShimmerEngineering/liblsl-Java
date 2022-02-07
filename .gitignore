@@ -10,3 +10,4 @@ jna-*.jar
 *.dll
 *.so
 *.dylib
+/bin/
