@@ -6,44 +6,38 @@
 // dependencies { implementation project(':liblsl-java') }
 // in the app's build.gradle
 
-apply plugin: 'com.android.library'
+//apply plugin: 'com.android.library'
+apply plugin: 'java'
 
 buildscript {
     repositories {
-        google()
+    	//google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.1'
+        //classpath 'com.android.tools.build:gradle:4.0.1'
+    }
+}
+
+repositories {
+    // Use 'jcenter' for resolving your dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+    flatDir {
+       dirs 'libs'
+   }
+       maven {
+        url 'https://shimmersensing.jfrog.io/artifactory/ShimmerAPI'
     }
 }
 
 dependencies {
     repositories {
         jcenter()
-        google()
+        //google()
     }
-    implementation 'net.java.dev.jna:jna:5.6.0@aar'
+    //implementation 'net.java.dev.jna:jna:5.6.0@aar'
+    compile(group: 'com.shimmersensing', name: 'ShimmerDriverPC', version: '0.9.4beta')
 }
 
-android {
-    compileSdkVersion 30
-    defaultConfig {
-        minSdkVersion 24
-        externalNativeBuild {
-            cmake {
-                arguments "-DANDROID_CPP_FEATURES=rtti exceptions","-DLSL_NO_FANCY_LIBNAME=1","-DANDROID_PLATFORM=24"
-                targets "lsl"
-            }
-        }
-    }
-    externalNativeBuild.cmake {
-        // If the Android SDK CMake is older than 3.12, you need to install CMake locally and
-        // configure the path in your local.properties file, e.g.
-        // cmake.dir=C\:\\Program Files\\CMake
-        version "3.12.0+"
-        path "../liblsl/CMakeLists.txt"
-    }
-    buildToolsVersion '30.0.1'
-    sourceSets.main.java.srcDirs += 'src'
-}
+

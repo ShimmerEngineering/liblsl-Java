@@ -2,24 +2,60 @@ package examples;
 import edu.ucsd.sccn.LSL;
 import java.io.IOException;
 
-public class SendData {
-    public static void main(String[] args) throws IOException, InterruptedException  {
-        System.out.println("Creating a new StreamInfo...");
-        LSL.StreamInfo info = new LSL.StreamInfo("BioSemi","EEG",8,100,LSL.ChannelFormat.float32,"myuid324457");
+import com.shimmerresearch.bluetooth.ShimmerBluetooth.BT_STATE;
+import com.shimmerresearch.driver.BasicProcessWithCallBack;
+import com.shimmerresearch.driver.CallbackObject;
+import com.shimmerresearch.driver.ObjectCluster;
+import com.shimmerresearch.driver.ShimmerDevice;
+import com.shimmerresearch.driver.ShimmerMsg;
+import com.shimmerresearch.pcDriver.ShimmerPC;
+import com.shimmerresearch.tools.bluetooth.BasicShimmerBluetoothManagerPc;
 
+public class SendData extends BasicProcessWithCallBack {
+	static ShimmerDevice shimmerDevice;
+	static BasicShimmerBluetoothManagerPc btManager = new BasicShimmerBluetoothManagerPc();
+	static LSL.StreamOutlet outlet;
+	
+	public static void main(String[] args) throws IOException, InterruptedException  {
+        System.out.println("Creating a new StreamInfo...");
+        LSL.StreamInfo info = new LSL.StreamInfo("SendData","Accel",3,51.2,LSL.ChannelFormat.float32,"test");
         System.out.println("Creating an outlet...");
-        LSL.StreamOutlet outlet = new LSL.StreamOutlet(info);
+        outlet = new LSL.StreamOutlet(info);
         
-        System.out.println("Sending data...");
-        float[] sample = new float[8];
-        for (int t=0;t<100000;t++) {
-            for (int k=0;k<8;k++)
-                sample[k] = (float)Math.random()*50-25;
-            outlet.push_sample(sample);
-            Thread.sleep(10);
-        }
+        SendData s = new SendData();
+        s.setWaitForData(btManager.callBackObject);
+        btManager.connectShimmerThroughCommPort("Com5");
         
-        outlet.close();
-        info.destroy();
-    }
+        //outlet.close();
+        //info.destroy();
+	}
+	
+	@Override
+	protected void processMsgFromCallback(ShimmerMsg shimmerMSG) {
+		int ind = shimmerMSG.mIdentifier;
+
+		Object object = (Object) shimmerMSG.mB;
+
+		if (ind == ShimmerPC.MSG_IDENTIFIER_STATE_CHANGE) {
+			CallbackObject callbackObject = (CallbackObject) object;
+
+			if (callbackObject.mState == BT_STATE.CONNECTED) {
+				shimmerDevice = btManager.getShimmerDeviceBtConnected("Com5");
+				System.out.println("Sending data...");
+				shimmerDevice.startStreaming();
+
+			} else if (ind == ShimmerPC.MSG_IDENTIFIER_DATA_PACKET) {
+				System.out.println("Shimmer MSG_IDENTIFIER_DATA_PACKET");
+				ObjectCluster objc = (ObjectCluster) shimmerMSG.mB;
+				double data = objc.getFormatClusterValue("Accel_LN_X", "CAL");
+				if(data != Double.NaN) {
+					float[] dataArray = new float[3];
+					dataArray[0] = (float)objc.getFormatClusterValue("Accel_LN_X", "CAL");
+					dataArray[1] = (float)objc.getFormatClusterValue("Accel_LN_Y", "CAL");
+					dataArray[2] = (float)objc.getFormatClusterValue("Accel_LN_Z", "CAL");
+					outlet.push_sample(dataArray);
+				}
+			}
+		}
+	}
 }
