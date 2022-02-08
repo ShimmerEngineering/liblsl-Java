@@ -15,6 +15,7 @@ public class SendData extends BasicProcessWithCallBack {
 	static ShimmerDevice shimmerDevice;
 	static BasicShimmerBluetoothManagerPc btManager = new BasicShimmerBluetoothManagerPc();
 	static LSL.StreamOutlet outlet;
+	static String btComport = "Com3";
 	
 	public static void main(String[] args) throws IOException, InterruptedException  {
         System.out.println("Creating a new StreamInfo...");
@@ -24,7 +25,7 @@ public class SendData extends BasicProcessWithCallBack {
         
         SendData s = new SendData();
         s.setWaitForData(btManager.callBackObject);
-        btManager.connectShimmerThroughCommPort("Com5");
+        btManager.connectShimmerThroughCommPort(btComport);
         
         //outlet.close();
         //info.destroy();
@@ -38,24 +39,30 @@ public class SendData extends BasicProcessWithCallBack {
 
 		if (ind == ShimmerPC.MSG_IDENTIFIER_STATE_CHANGE) {
 			CallbackObject callbackObject = (CallbackObject) object;
-
 			if (callbackObject.mState == BT_STATE.CONNECTED) {
-				shimmerDevice = btManager.getShimmerDeviceBtConnected("Com5");
+				shimmerDevice = btManager.getShimmerDeviceBtConnected(btComport);
 				System.out.println("Sending data...");
-				shimmerDevice.startStreaming();
-
-			} else if (ind == ShimmerPC.MSG_IDENTIFIER_DATA_PACKET) {
-				System.out.println("Shimmer MSG_IDENTIFIER_DATA_PACKET");
-				ObjectCluster objc = (ObjectCluster) shimmerMSG.mB;
-				double data = objc.getFormatClusterValue("Accel_LN_X", "CAL");
-				if(data != Double.NaN) {
-					float[] dataArray = new float[3];
-					dataArray[0] = (float)objc.getFormatClusterValue("Accel_LN_X", "CAL");
-					dataArray[1] = (float)objc.getFormatClusterValue("Accel_LN_Y", "CAL");
-					dataArray[2] = (float)objc.getFormatClusterValue("Accel_LN_Z", "CAL");
-					outlet.push_sample(dataArray);
-				}
 			}
 		}
+		else if (ind == ShimmerPC.MSG_IDENTIFIER_NOTIFICATION_MESSAGE) {
+			CallbackObject callbackObject = (CallbackObject)object;
+			int msg = callbackObject.mIndicator;
+			if (msg== ShimmerPC.NOTIFICATION_SHIMMER_FULLY_INITIALIZED){
+				shimmerDevice.startStreaming();
+			}
+		}
+		else if (ind == ShimmerPC.MSG_IDENTIFIER_DATA_PACKET) {
+			System.out.println("Shimmer MSG_IDENTIFIER_DATA_PACKET");
+			ObjectCluster objc = (ObjectCluster) shimmerMSG.mB;
+			double data = objc.getFormatClusterValue("Accel_LN_X", "CAL");
+			if(data != Double.NaN) {
+				float[] dataArray = new float[3];
+				dataArray[0] = (float)objc.getFormatClusterValue("Accel_LN_X", "CAL");
+				dataArray[1] = (float)objc.getFormatClusterValue("Accel_LN_Y", "CAL");
+				dataArray[2] = (float)objc.getFormatClusterValue("Accel_LN_Z", "CAL");
+				outlet.push_sample(dataArray);
+			}
+		}
+		
 	}
 }
