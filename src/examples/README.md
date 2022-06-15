@@ -1,3 +1,5 @@
+This has been updated just to test the feasibility of using the Shimmer API. Test looks promising, but no validation was done.
+
 Steps to run the examples
 1. Right click project folder > configure > add gradle nature
 2. Include liblsl64.dll into your application's root directory, or a system folder
