@@ -3,8 +3,10 @@ import edu.ucsd.sccn.LSL;
 
 public class ReceiveDataInChunks {
     public static void main(String[] args) throws Exception  {
+    	
+    	NativeLibraryLoader.loadLibrary(); //to use the lib/liblsl64.dll
         System.out.println("Resolving an EEG stream...");
-        LSL.StreamInfo[] results = LSL.resolve_stream("type","EEG");
+        LSL.StreamInfo[] results = LSL.resolve_stream("type","Accel");
 
         // open an inlet
         LSL.StreamInlet inlet = new LSL.StreamInlet(results[0]);

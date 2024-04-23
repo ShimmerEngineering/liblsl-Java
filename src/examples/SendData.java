@@ -10,14 +10,19 @@ import com.shimmerresearch.driver.ShimmerDevice;
 import com.shimmerresearch.driver.ShimmerMsg;
 import com.shimmerresearch.pcDriver.ShimmerPC;
 import com.shimmerresearch.tools.bluetooth.BasicShimmerBluetoothManagerPc;
+import com.shimmerresearch.exceptions.ShimmerException;
+
 
 public class SendData extends BasicProcessWithCallBack {
+	
 	static ShimmerDevice shimmerDevice;
 	static BasicShimmerBluetoothManagerPc btManager = new BasicShimmerBluetoothManagerPc();
 	static LSL.StreamOutlet outlet;
-	static String btComport = "Com3";
+	static String btComport = "Com8";
 	
 	public static void main(String[] args) throws IOException, InterruptedException  {
+		
+		NativeLibraryLoader.loadLibrary(); //to use the lib/liblsl64.dll
         System.out.println("Creating a new StreamInfo...");
         LSL.StreamInfo info = new LSL.StreamInfo("SendData","Accel",3,51.2,LSL.ChannelFormat.float32,"test");
         System.out.println("Creating an outlet...");
@@ -48,7 +53,11 @@ public class SendData extends BasicProcessWithCallBack {
 			CallbackObject callbackObject = (CallbackObject)object;
 			int msg = callbackObject.mIndicator;
 			if (msg== ShimmerPC.NOTIFICATION_SHIMMER_FULLY_INITIALIZED){
-				shimmerDevice.startStreaming();
+				try {
+			        shimmerDevice.startStreaming();
+			    } catch (ShimmerException e) {
+			        e.printStackTrace();
+			    }
 			}
 		}
 		else if (ind == ShimmerPC.MSG_IDENTIFIER_DATA_PACKET) {

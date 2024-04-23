@@ -3,6 +3,8 @@ import edu.ucsd.sccn.LSL;
 
 public class ReceiveData {
     public static void main(String[] args) throws Exception  {
+    	
+    	NativeLibraryLoader.loadLibrary(); //to use the lib/liblsl64.dll
 		try {
 			System.out.println("Resolving an Accel stream...");
 			LSL.StreamInfo[] results = LSL.resolve_stream("type","Accel");
